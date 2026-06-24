@@ -70,6 +70,7 @@ This project is already configured for deployment on Vercel.
 
 - `vercel.json` contains deployment metadata
 - `public/` hosts static assets and manifest
+- Live demo: [Running Animal — Race Betting Game](https://running-animals.vercel.app/)
 
 ## 💡 Notes
 

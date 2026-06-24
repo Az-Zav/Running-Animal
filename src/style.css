@@ -1,0 +1,622 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  --pk-blue: #3c5aa6;
+  --pk-yellow: #ffcb05;
+  --pk-bg: #f0f0f0;
+  --pk-border: #333;
+}
+
+/* ── Mobile Browser Quirk Prevention ──────────────────────────── */
+html {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a1a;
+  overflow: hidden;
+  font-family: 'Press Start 2P', cursive;
+  color: var(--pk-border);
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ── Global UI ─────────────────────────────────────────────────── */
+.global-ui {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 8000;
+  pointer-events: none;
+}
+
+.persistent-status {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.sound-btn {
+  pointer-events: auto !important;
+  width: auto !important;
+  padding: 8px 15px !important;
+  font-size: 10px !important;
+  background: var(--pk-blue);
+  color: white;
+  border: 4px solid var(--pk-border);
+  cursor: pointer;
+}
+
+.sound-btn:hover {
+  background: #2a4178;
+}
+
+/* ── Title Screen ───────────────────────────────────────────────── */
+.title-screen-overlay {
+  position: fixed; /* Fixed to viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* Absolute top */
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.title-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.game-title {
+  font-size: 80px;
+  color: var(--pk-yellow);
+  line-height: 1.1;
+  text-shadow: 8px 8px 0 var(--pk-blue), 12px 12px 0 rgba(0,0,0,0.5);
+  margin-bottom: 60px;
+  text-transform: uppercase;
+}
+
+.btn-start-game {
+  padding: 30px 60px;
+  background: var(--pk-blue);
+  color: white;
+  border: 6px solid white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+}
+
+.btn-start-game:active {
+  transform: scale(0.95);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+}
+
+.press-start {
+  font-size: 16px;
+  color: #ccc;
+  margin-top: 30px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+#game-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  /* Dimensions now set by JS resize() to match canvas exactly */
+  margin: auto;
+  /* Safe area insets for notched devices */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+canvas {
+  image-rendering: pixelated;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+/* ── Pokemon Retro UI Styles ────────────────────────────────────── */
+.retro-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allow clicks to pass through to canvas by default */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+.retro-panel {
+  background: white;
+  border: 4px solid var(--pk-border);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+  pointer-events: auto; /* Enable clicks for actual panels */
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* History row: newest winner first (left); scroll horizontally for older races */
+.history-strip {
+  position: absolute;
+  top: 52px;
+  left: 8px;
+  right: 8px;
+  transform: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  pointer-events: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 4px 160px 4px 4px;
+  z-index: 1050;
+}
+
+.history-strip::-webkit-scrollbar {
+  height: 4px;
+}
+
+.history-strip::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+.history-item {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
+}
+
+.history-item img {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  opacity: 0.8;
+}
+
+/* Betting Strip in the Grass (Bottom) - Floating Overlay */
+.betting-strip {
+  position: absolute;
+  bottom: 20px; /* Floating slightly above the very bottom */
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  pointer-events: auto;
+  color: white;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+.animal-bet-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.portrait-mini {
+  width: 70px;
+  height: 70px;
+  border: 4px solid var(--pk-border);
+  background: rgba(0,0,0,0.5);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+.portrait-mini img {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.bet-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.bet-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-bet {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--pk-border);
+  background: var(--pk-yellow);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+.bet-amount {
+  font-size: 16px;
+  min-width: 30px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Wallet and Timer */
+.status-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.wallet-mini {
+  background: white;
+  border: 4px solid var(--pk-border);
+  padding: 10px;
+  font-size: 10px;
+  pointer-events: auto;
+}
+
+.timer-card {
+  background: #d32f2f;
+  color: white;
+  border: 4px solid var(--pk-border);
+  padding: 10px;
+  font-size: 12px;
+  pointer-events: auto;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ── Redemption Modal ────────────────────────────────────────── */
+.redeem-modal {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.redeem-input {
+  width: 100%;
+  padding: 15px;
+  border: 4px solid var(--pk-border);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.btn-redeem {
+  padding: 15px;
+  background: var(--pk-blue);
+  color: white;
+  border: 4px solid var(--pk-border);
+  font-family: 'Press Start 2P', cursive;
+  cursor: pointer;
+}
+
+.reward-msg {
+  color: #2e7d32;
+  font-size: 10px;
+  margin-top: 10px;
+}
+
+/* ── Hidden redeem overlay ───────────────────────────────────── */
+.redeem-panel-root {
+  position: absolute;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+.redeem-panel-root.hidden {
+  display: none !important;
+}
+
+.redeem-modal-floating {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 100%;
+  max-width: 400px;
+  z-index: 1;
+}
+
+.wallet-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.wallet-passive {
+  font-size: 7px;
+  color: var(--pk-yellow);
+  text-shadow: 1px 1px 0 #000;
+  max-width: 160px;
+  text-align: right;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.redeem-feedback {
+  font-size: 8px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.redeem-feedback-error {
+  color: #ffcdd2;
+}
+
+.redeem-feedback-warn {
+  color: #ffe082;
+}
+
+/* ── Mobile Responsiveness ───────────────────────────────────── */
+@media (max-width: 768px) {
+  /* ── Betting Strip: wrapped grid, compact on real mobile viewports ──── */
+  .betting-strip {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 8px;
+    padding: 6px 8px;
+    bottom: 4px;
+    max-height: 36%;
+    overflow-y: auto;
+  }
+
+  .animal-bet-unit {
+    flex-shrink: 0;
+    width: 30%;
+    min-width: 76px;
+  }
+
+  .portrait-mini {
+    width: 42px;
+    height: 42px;
+    border-width: 3px;
+  }
+
+  .bet-label {
+    font-size: 6px;
+  }
+
+  .btn-bet {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+
+  .bet-amount {
+    font-size: 12px;
+    min-width: 22px;
+  }
+
+  .bet-controls {
+    gap: 6px;
+  }
+
+  /* ── Status Bar ──── */
+  .status-bar {
+    top: 5px;
+    left: 5px;
+  }
+
+  .wallet-mini, .timer-card {
+    font-size: 8px;
+    padding: 5px;
+    border-width: 2px;
+  }
+
+  /* ── History: room for wallet + sound (top-right) ──── */
+  .history-strip {
+    top: 46px;
+    left: 4px;
+    right: 4px;
+    gap: 6px;
+    padding: 2px 150px 2px 2px;
+  }
+
+  .history-item {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* ── Title Screen ──── */
+  .game-title {
+    font-size: 40px;
+    margin-bottom: 30px;
+    text-shadow: 4px 4px 0 var(--pk-blue), 6px 6px 0 rgba(0,0,0,0.5);
+  }
+
+  .btn-start-game {
+    padding: 20px 40px;
+    font-size: 18px;
+    border-width: 4px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+  }
+
+  .press-start {
+    font-size: 12px;
+    margin-top: 20px;
+  }
+
+  /* ── Global UI ──── */
+  .global-ui {
+    top: 5px;
+    right: 5px;
+  }
+
+  .sound-btn {
+    padding: 6px 10px !important;
+    font-size: 8px !important;
+    border-width: 2px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .persistent-status {
+    gap: 8px;
+  }
+
+  /* ── Redeem Modal ──── */
+  .redeem-modal {
+    top: 15%;
+    gap: 12px;
+  }
+
+  .redeem-input {
+    padding: 12px;
+    font-size: 10px;
+  }
+
+  .btn-redeem {
+    padding: 12px;
+    font-size: 10px;
+    min-height: 44px;
+  }
+}
+
+/* ── Extra-Small Screens (iPhone SE etc.) ────────────────────── */
+@media (max-width: 400px) {
+  .betting-strip {
+    gap: 4px 6px;
+    padding: 4px 4px;
+    bottom: 2px;
+    max-height: 34%;
+  }
+
+  .animal-bet-unit {
+    width: 30%;
+    min-width: 70px;
+  }
+
+  .portrait-mini {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+  }
+
+  .bet-label {
+    font-size: 5px;
+  }
+
+  .btn-bet {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+    border-width: 2px;
+  }
+
+  .game-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .btn-start-game {
+    padding: 16px 32px;
+    font-size: 14px;
+    border-width: 3px;
+  }
+
+  .press-start {
+    font-size: 10px;
+  }
+}
+
+/* ── Phone landscape: short vertical space ─────────────────── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  .history-strip {
+    top: 42px;
+    padding: 2px 140px 2px 2px;
+    gap: 5px;
+  }
+
+  .history-item {
+    width: 32px;
+    height: 32px;
+  }
+
+  .betting-strip {
+    bottom: 2px;
+    max-height: 32%;
+    gap: 4px 6px;
+    padding: 4px 6px;
+  }
+
+  .portrait-mini {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn-bet {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .animal-bet-unit {
+    min-width: 72px;
+  }
+}

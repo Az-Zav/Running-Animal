@@ -1,0 +1,11 @@
+{
+  "name": "Running Animals",
+  "short_name": "RunAnimals",
+  "description": "A retro pixel-art animal racing and betting game",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "icons": []
+}

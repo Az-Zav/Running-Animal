@@ -79,4 +79,4 @@ This project is already configured for deployment on Vercel.
 
 ## 🧾 License
 
-This project is licensed under the terms of the `ISC` license.
+This project is licensed under the terms of the `MIT` license.
